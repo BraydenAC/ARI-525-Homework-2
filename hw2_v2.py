@@ -221,7 +221,7 @@ elif bias_selector == "skip":
     skip_gram_model = gensim.models.keyedvectors.load_word2vec_format("skip_gram_no_lemma.vec")
     evaluate(query, skip_gram_model, 'Skip-Gram Model')
 elif bias_selector == "cbow":
-    cbow_model = gensim.models.keyedvectors.load_word2vec_format("cbow.vec")
+    cbow_model = gensim.models.keyedvectors.load_word2vec_format("cbow_vector_no_lemma.vec")
     evaluate(query, cbow_model, 'CBOW Model')
 elif bias_selector == "wiki":
     wiki_model = gensim.models.keyedvectors.load_word2vec_format("wiki-news-300d-1M-subword.vec")
@@ -246,8 +246,6 @@ def get_bow(file):
 #Initialize logistic regression model
 log_reg = LogisticRegression(penalty='l2', random_state=42)
 
-regression_selector = "wiki" #Options: imdb, wiki
-
 pos_train_files = glob.glob('aclImdb/train/pos/*')
 neg_train_files = glob.glob('aclImdb/train/neg/*')
 
@@ -256,7 +254,9 @@ num_files_per_class = 10000
 all_train_files = pos_train_files[:num_files_per_class] + neg_train_files[:num_files_per_class]
 y = [1] * num_files_per_class + [0] * num_files_per_class
 
-if regression_selector == "imdb":
+regression_selector = "wiki" #Options: imdb, wiki, pass
+if regression_selector == "pass": pass
+elif regression_selector == "imdb":
     vectorizer = TfidfVectorizer(input="filename", stop_words="english")
     X = vectorizer.fit_transform(all_train_files)
 
@@ -267,10 +267,11 @@ if regression_selector == "imdb":
     log_reg.fit(X_train, y_train)
 
     #get predictions and report
-    preds1 = log_reg.predict(X_dev)
-    print(classification_report(y_dev, preds1))
+    preds1 = log_reg.predict(X_test)
+    print(accuracy_score(y_test, preds1))
+    print(classification_report(y_test, preds1))
 
-if regression_selector == "wiki":
+elif regression_selector == "wiki":
     print("Loading Wikipedia Model")
     wiki_model = gensim.models.keyedvectors.load_word2vec_format("wiki-news-300d-1M-subword.vec")
     print("Wikipedia Model Loaded Successfully")
@@ -296,7 +297,7 @@ if regression_selector == "wiki":
     X_train, X_dev_test, y_train, y_dev_test= train_test_split(cbow_embeddings, y, test_size=0.3, random_state=42)
     X_dev, X_test, y_dev, y_test = train_test_split(X_dev_test, y_dev_test, test_size=0.5, random_state=42)
     log_reg.fit(X_train, y_train)
-    preds2 = log_reg.predict(X_dev)
-    print(classification_report(y_dev, preds2))
-
+    preds2 = log_reg.predict(X_test)
+    print(accuracy_score(y_test, preds2))
+    print(classification_report(y_test, preds2))
 
